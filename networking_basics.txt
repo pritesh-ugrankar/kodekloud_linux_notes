@@ -1,0 +1,304 @@
+Most networking related commands like ping, ssh, curl etc. look for the hostname in the /etc/hosts (note it is hostS and not host) file. 
+----------------------------------------------
+FORMAT of /etc/hosts
+----------------------------------------------
+#IP Address TAB/SPACE HOSTNAME
+192.168.1.10	db
+----------------------------------------------
+Ping may not be the best command to check network connection, because it may be disabled. Better options are nslookup and dig.
+Whatever is mentioned in the /etc/hosts file it is the source of truth for the host.
+
+Name Resolution - Translating IP  to HOST NAME.
+
+If there are too many servers, then each needs to have a copy of all the IPs and hostnames of ALL the servers, which makes it really cumbersome.
+If the IP address of even 1 host changes, it has to be updated in ALL the /etc/hosts files of ALL the hosts. 
+Better way is to make the hosts point to a DNS (Domain Name Server), which has the list of the said IP addresses and hosts.
+How to make the hosts point to the DNS server? Enter the DNS Server name followed by it's IP Address in the /etc/resolv.conf (note it is resolV and not resolvE).
+
+----------------------------------------------
+FORMAT of /etc/resolv.conf
+----------------------------------------------
+#NAMESERVER TAB/SPACE IP ADDRESS
+nameserver	192.168.1.100
+----------------------------------------------
+
+YOU CAN HAVE ENTRIES IN BOTH /etc/hosts and /etc/resolv.conf on a system. /etc/hosts WILL GET PREFERENCE. BUT THIS ORDER CAN BE CHANGED.
+The order of looking first in /etc/hosts and after that in /etc/resolv.conf is mentioned in the /etc/nsswitch.conf
+
+----------------------------------------------
+FORMAT of /etc/nsswitch.conf
+----------------------------------------------
+hosts:		files dns
+#Above line instructs the host to first looking
+#into the files (/etc/hosts) and then look
+#into the DNS Server (/etc/resolv.conf).
+----------------------------------------------
+
+What if you now try to ping www.facebook.com. It is not there in either /etcc/hosts or /etc/resolv.conf
+Add 8.8.8.8 (google hosted DNS) /etc/resolv.conf but then it will only be for that specific host. 
+Better thing to do, is add the following entry to the DNS Server itself:
+
+Forward All to 8.8.8.8
+
+Say, now you need to access the db server for your company named as db.yourcompanyname.com.
+Problem is, earlier you could access it by just using the name "db", but , because your company changed the name to db.yourcompany.com so that it can be accessed from
+the outside world, you also need to type db.yourcompanyname.com. OR what you can do is, within the /etc/resolv.conf file of your host, you can add this line.
+
+search yourcompanyname.com
+
+After you add the above line into the /etc/resolv.conf of your host and you try to access the db server by just typing the name db, it will work, because the above
+line will now automatically append the yourcompanyname.com line to the name of the server. So now, when you type, for example, ssh db, it will automatically become
+db.yourcompanyname.com.
+
+You can also do the following:
+
+search yourcompanyname.com prod.yourcompanyname.com
+
+If you add the above entry to the /etc/resolv.conf of your server and then run a command e.g ping webserver, the above line will first search for webserver.yourcompanyname.com and if it does not find that, it will search for webserver.prod.yourcompanyname.com etc.
+
+Pinging the server may or may not work. Better option is to use the "dig" command or "nslookup" command.
+
+Dig command example:
+
+dig google.com
+
+; <<>> DiG 9.18.1-1ubuntu1.1-Ubuntu <<>> google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 51012
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;google.com.			IN	A
+
+;; ANSWER SECTION:
+google.com.		159	IN	A	142.250.195.206
+
+;; Query time: 7 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53) (UDP)
+;; WHEN: Sun Sep 04 20:32:32 IST 2022
+;; MSG SIZE  rcvd: 55
+--------------------------------------------------------------------------
+nslookup www.google.com
+
+Server:		127.0.0.53
+Address:	127.0.0.53#53
+
+Non-authoritative answer:
+Name:	www.google.com
+Address: 142.250.76.164
+Name:	www.google.com
+Address: 2404:6800:4007:823::2004
+--------------------------------------------------------------------------------------
+Routing
+Switches connect devices on the same subnet. Routers connect devices on DIFFERENT networks.
+So let us say, server with ip 192.168.1.10 wants to send packets to 192.168.2.1, how will it do it? It will go through the router.
+The router in this case, will have at least two interfaces, each with IP addresses belonging to earch of the subnets.
+But, there may be many such devices on the network. So what makes a router a "router"? This is where a system with a "gateway" is configured.
+Gateway, as the name suggests is a gateway to another networks or even the internet itself.
+The systems (servers) need to know where the gateway/router is at. To see the existing routing configuration, run the "route" command. 
+
+Consider that your server currently has no route defined. Your server IP address is, say , 192.168.1.11 and it needs to talk to the server with ip 192.168.2.10
+Then you will run the following command on the 192.168.1.11 server:
+
+ip route add 192.168.2.0/24 via 192.168.1.1
+
+Now, main point is, you will need to run this command on EVERY SERVER that needs to talk to another server on another network.
+So, running the above command will make the server 192.168.1.11 jto talk to 192.168.2.10 BUT, 192.168.2.10 WILL NOT BE ABLE TO TALK TO 192.168.1.11 UNLESS YOU 
+RUN THE FOLLOWING COMMAND ON THE 192.168.2.10:
+
+ip route add 192.168.1.0/24 via 192.168.2.1
+
+Now say you want the systems to access the internet and your router is connected to the internet, you need to add the following entry in the route table of 
+193.168.2.10. This means, for any network for which you DO NOT KNOW THE ROUTE, make this the DEFAULT GATEWAY. You can also think of this as "access the Internet
+through the 192.168.2.1 ip address."
+
+ip route add default via 192.168.2.1
+
+OR
+
+ip route add 0.0.0.0 via 192.168.2.1
+
+If you have multiple routers in your network such that one router is for internet access through the gateway 192.168.2.1  and another for internal network through gateway 192.168.2.2,then you will need to add both the routes 
+to the systems.
+
+So, you will need to run both the commands 
+ip route add 0.0.0.0 via 192.168.2.1
+ip route add 192.168.1.0/24 via 192.168.2.2
+
+Important commands:
+
+ip link - To list and modify interfaces on the hosts.
+ip addr - To see the IP Addresses asigned to the interfaces.
+ip addr add 192.168.1.10/24 dev eth0 - Will apply/add the ip 192.168.1.10 to the eth0 network interface.
+
+REMEMBER, THESE CHANGES WILL NOT BE SAVED AFTER REBOOT. To make them persistent, you must set these in the /etc/network/interfaces file 
+
+ip route OR route - To view the routing table.
+
+ip route add 192.168.1.0/24 via 192.168.2.1 - command used to ADD routing tables.
+
+LAB QnA:
+What is the IP Address of Bobs' laptop:
+Run the ip addr command. You see two IP addresses there - 172.16.238.187 and 172.16.239.187. BOTH of these are the IPs of the laptop.
+bob@caleston-lp10:~$ ip addr 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+14: eth0@if15: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:10:ee:bb brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.16.238.187/24 brd 172.16.238.255 scope global eth0
+       valid_lft forever preferred_lft forever
+18: eth1@if19: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:10:ef:bb brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.16.239.187/24 brd 172.16.239.255 scope global eth1
+       valid_lft forever preferred_lft forever
+22: eth2@if23: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:11:00:05 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.5/16 brd 172.17.255.255 scope global eth2
+       valid_lft forever preferred_lft forever
+
+What is the default gateway configured in this system? 
+Run the route command. See the IP Address that is mentioned under Gateway and the word "default" next to it.
+It is 172.16.238.1. This is our default gateway.
+
+bob@caleston-lp10:~$ route
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+default         172.16.238.1    0.0.0.0         UG    0      0        0 eth0
+172.16.238.0    0.0.0.0         255.255.255.0   U     0      0        0 eth0
+172.16.239.0    0.0.0.0         255.255.255.0   U     0      0        0 eth1
+172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 eth2
+bob@caleston-lp10:~$ 
+
+We have an apache which should be accessible on devapp01-web. This server runs on port 80 on the server and should be accessible from Bob's laptop.
+However, something seems to be wrong with the network! 
+Check if you are able to connect to the HTTP port 80 on the server devapp01-web from Bob's laptop?
+Run a Telnet port 80 on devapp01-web to test.
+
+Run the telnet command as shown below. Note it fails.
+
+bob@caleston-lp10:~$ telnet devapp01-web
+Trying 172.16.238.10...
+telnet: Unable to connect to remote host: No route to host
+bob@caleston-lp10:~$ 
+
+Now see if you can ping to it. 
+NOTE how pinging WITHOUT root access generates a "lacking priviledge..." error.
+When we ping as root, the ping fails saying destination host in unreachable.
+
+bob@caleston-lp10:~$ telnet devapp01-web
+Trying 172.16.238.10...
+telnet: Unable to connect to remote host: No route to host
+bob@caleston-lp10:~$ ping devapp01-web
+ping: Lacking privilege for raw socket.
+bob@caleston-lp10:~$ sudo ping devapp01-web
+[sudo] password for bob: 
+PING devapp01-web (172.16.238.10): 56 data bytes
+92 bytes from caleston-lp10 (172.16.238.187): Destination Host Unreachable
+92 bytes from caleston-lp10 (172.16.238.187): Destination Host Unreachable
+92 bytes from caleston-lp10 (172.16.238.187): Destination Host Unreachable
+92 bytes from caleston-lp10 (172.16.238.187): Destination Host Unreachable
+92 bytes from caleston-lp10 (172.16.238.187): Destination Host Unreachable
+92 bytes from caleston-lp10 (172.16.238.187): Destination Host Unreachable
+92 bytes from caleston-lp10 (172.16.238.187): Destination Host Unreachable
+92 bytes from caleston-lp10 (172.16.238.187): Destination Host Unreachable
+^C--- devapp01-web ping statistics ---
+10 packets transmitted, 0 packets received, 100% packet loss
+bob@caleston-lp10:~$ 
+
+Luckily, this webserver has two interfaces. The second interface is on another network and is identified by the name devapp01. Check if you are able to ping devapp01
+That seems to work.
+bob@caleston-lp10:~$ sudo ping devapp01
+PING devapp01 (172.16.239.10): 56 data bytes
+64 bytes from 172.16.239.10: icmp_seq=0 ttl=64 time=0.177 ms
+64 bytes from 172.16.239.10: icmp_seq=1 ttl=64 time=0.079 ms
+64 bytes from 172.16.239.10: icmp_seq=2 ttl=64 time=0.083 ms
+64 bytes from 172.16.239.10: icmp_seq=3 ttl=64 time=0.077 ms
+64 bytes from 172.16.239.10: icmp_seq=4 ttl=64 time=0.109 ms
+64 bytes from 172.16.239.10: icmp_seq=5 ttl=64 time=0.077 ms
+64 bytes from 172.16.239.10: icmp_seq=6 ttl=64 time=0.090 ms
+64 bytes from 172.16.239.10: icmp_seq=7 ttl=64 time=0.089 ms
+^C--- devapp01 ping statistics ---
+8 packets transmitted, 8 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 0.077/0.098/0.177/0.032 ms
+bob@caleston-lp10:~$ 
+
+Now let us troubleshoot by ssh'ing into devapp01 and inspecting the network interface by running the ip link command.
+NOTE THE NAME OF THE SERVER IS NOW DEVAPP01.
+bob@devapp01:~$ sudo ip link
+[sudo] password for bob: 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+12: eth0@if13: <BROADCAST,MULTICAST> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default 
+    link/ether 02:42:ac:10:ee:0a brd ff:ff:ff:ff:ff:ff link-netnsid 0
+16: eth1@if17: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
+    link/ether 02:42:ac:10:ef:0a brd ff:ff:ff:ff:ff:ff link-netnsid 0
+20: eth2@if21: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
+    link/ether 02:42:ac:11:00:04 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+bob@devapp01:~$ 
+
+Make a note of the interface that is down. It is eth0@if13.
+Now run the ip addr command and see that the interface eth0@if13 associated with the IP 172.16.238.10 is DOWN!!
+bob@devapp01:~$ sudo ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+12: eth0@if13: <BROADCAST,MULTICAST> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:ac:10:ee:0a brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.16.238.10/24 brd 172.16.238.255 scope global eth0
+       valid_lft forever preferred_lft forever
+16: eth1@if17: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:10:ef:0a brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.16.239.10/24 brd 172.16.239.255 scope global eth1
+       valid_lft forever preferred_lft forever
+20: eth2@if21: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:11:00:04 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.4/16 brd 172.17.255.255 scope global eth2
+       valid_lft forever preferred_lft forever
+
+NOTE : ip addr command is used to either add or remove or change IP Address!! 
+ip link command is used to bring the network interface up or down!!
+So, run the sudo ip link set dev eth0 up command to bring up the network interface, and then run the ip link and ip addr commands with grep to fiter out
+unwanted data. You can see that the interface is up now.
+
+bob@devapp01:~$ sudo ip link set dev eth0 up
+bob@devapp01:~$ 
+bob@devapp01:~$ sudo ip link | grep eth0
+12: eth0@if13: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
+bob@devapp01:~$ 
+bob@devapp01:~$ sudo ip addr | grep eth0 
+12: eth0@if13: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    inet 172.16.238.10/24 brd 172.16.238.255 scope global eth0
+bob@devapp01:~$ 
+
+While we are at it, there is also a missing default route on the server devapp01. Add the default route via eth0 gateway.
+So, we check the subnet associated with eth0, it is 172.16.238 network. So we add 1 to it, and give route to default (0.0.0.0) THROUGH it.
+
+bob@devapp01:~$ sudo ip addr | grep 238
+    inet 172.16.238.10/24 brd 172.16.238.255 scope global eth0
+bob@devapp01:~$ sudo ip addr | grep 239
+
+First run the command to check the route.
+bob@devapp01:~$ sudo route
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+172.16.238.0    0.0.0.0         255.255.255.0   U     0      0        0 eth0
+172.16.239.0    0.0.0.0         255.255.255.0   U     0      0        0 eth1
+172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 eth2
+
+Then run the command: sudo ip route add default via 172.16.238.1
+bob@devapp01:~$ sudo ip route add default via 172.16.238.1
+
+Then check the routing table again
+bob@devapp01:~$ sudo route
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+default         172.16.238.1    0.0.0.0         UG    0      0        0 eth0
+172.16.238.0    0.0.0.0         255.255.255.0   U     0      0        0 eth0
+172.16.239.0    0.0.0.0         255.255.255.0   U     0      0        0 eth1
+172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 eth2
