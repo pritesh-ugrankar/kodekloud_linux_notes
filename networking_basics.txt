@@ -54,7 +54,8 @@ You can also do the following:
 
 search yourcompanyname.com prod.yourcompanyname.com
 
-If you add the above entry to the /etc/resolv.conf of your server and then run a command e.g ping webserver, the above line will first search for webserver.yourcompanyname.com and if it does not find that, it will search for webserver.prod.yourcompanyname.com etc.
+If you add the above entry to the /etc/resolv.conf of your server and then run a command e.g ping webserver, the above line will 
+first search for webserver.yourcompanyname.com and if it does not find that, it will search for webserver.prod.yourcompanyname.com etc.
 
 Pinging the server may or may not work. Better option is to use the "dig" command or "nslookup" command.
 
