@@ -1,19 +1,24 @@
-Most networking related commands like ping, ssh, curl etc. look for the hostname in the /etc/hosts (note it is hostS and not host) file. 
+Most networking related commands like ping, ssh, curl etc. look for the hostname
+in the /etc/hosts (note it is hostS and not host) file. 
 ----------------------------------------------
 FORMAT of /etc/hosts
 ----------------------------------------------
 #IP Address TAB/SPACE HOSTNAME
 192.168.1.10	db
 ----------------------------------------------
-Ping may not be the best command to check network connection, because it may be disabled. Better options are nslookup and dig.
-Whatever is mentioned in the /etc/hosts file it is the source of truth for the host.
+Ping may not be the best command to check network connection, 
+because it may be disabled. Better options are nslookup and dig.Whatever is 
+mentioned in the /etc/hosts file, it is the source of truth for the host.
 
 Name Resolution - Translating IP  to HOST NAME.
 
-If there are too many servers, then each needs to have a copy of all the IPs and hostnames of ALL the servers, which makes it really cumbersome.
-If the IP address of even 1 host changes, it has to be updated in ALL the /etc/hosts files of ALL the hosts. 
-Better way is to make the hosts point to a DNS (Domain Name Server), which has the list of the said IP addresses and hosts.
-How to make the hosts point to the DNS server? Enter the DNS Server name followed by it's IP Address in the /etc/resolv.conf (note it is resolV and not resolvE).
+If there are too many servers, then each needs to have a copy of all the IPs and 
+hostnames of ALL the servers, which makes it really cumbersome. 
+If the IP address of even 1 host changes, it has to be updated in ALL the 
+/etc/hosts files of ALL the hosts. Better way is to make the hosts point 
+to a DNS (Domain Name Server), which has the list of the said IP addresses and hosts.
+How to make the hosts point to the DNS server? Enter the DNS Server name followed 
+by it's IP Address in the /etc/resolv.conf (note it is resolV and not resolvE).
 
 ----------------------------------------------
 FORMAT of /etc/resolv.conf
@@ -22,8 +27,10 @@ FORMAT of /etc/resolv.conf
 nameserver	192.168.1.100
 ----------------------------------------------
 
-YOU CAN HAVE ENTRIES IN BOTH /etc/hosts and /etc/resolv.conf on a system. /etc/hosts WILL GET PREFERENCE. BUT THIS ORDER CAN BE CHANGED.
-The order of looking first in /etc/hosts and after that in /etc/resolv.conf is mentioned in the /etc/nsswitch.conf
+YOU CAN HAVE ENTRIES IN BOTH /etc/hosts and /etc/resolv.conf on a system. 
+In that case, the /etc/hosts WILL GET PREFERENCE. BUT THIS ORDER CAN BE CHANGED.
+The order of looking first in /etc/hosts and after that in /etc/resolv.conf 
+is mentioned in the /etc/nsswitch.conf
 
 ----------------------------------------------
 FORMAT of /etc/nsswitch.conf
