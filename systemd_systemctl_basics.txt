@@ -1,47 +1,53 @@
-Service management by creating a Service Unit so that you can keep running the scripts/programs/service you want in the background.
+------------------------------------------------------------------------------------------------------------------------------------------
+Service management is done by creating a Service Unit so that you can keep running the scripts/programs/service you want in the background.
+------------------------------------------------------------------------------------------------------------------------------------------
 Say you have the following requirements:
+
 You have a script /usr/bin/project-mercury.sh which has to start during boot and keep running as a service.
 The script above starts a Python Django application installed on the same server/laptop.
-However, the above application depends on PostGreSQL DB, so the postgres service should be running before the 
-python application can be started sucessfully.
-A Service Account called project_mercury has already been created in the system. The service should make use
-of this user account. 
-If the application fails for any reason, it should restart automatically. If it fails again, it should restart
-after waiting for 10 seconds. However, if Bob shuts down the service himself, it should remain shutdown. 
-The application events such as start, stop, failure, errors etc sould be logged in the system so that the failures 
-can be investigated later.
+However, the above application depends on PostGreSQL DB, so the postgres service should be running before the python application can be started sucessfully.
+A Service Account called project_mercury has already been created in the system. The service should make use of this user account. 
+If the application fails for any reason, it should restart automatically. If it fails again, it should restart after waiting for 10 seconds. 
+However, if the devops guy  shuts down the service himself, it should remain shutdown. 
+The application events such as start, stop, failure, errors etc sould be logged in the system so that the failures can be investigated later.
 You login to the system through GUI, so the service should start in graphical mode with all the above criteria satisfied.
 
 How to create such a service?
 
-IMPORTANT - Take one condition at a time and build on it.
-To run the /usr/bin/project-mercury.sh in the background it has to be defined as  a service. To do this, you need to create
-a SERVICE UNIT FILE. The service unit file will be located in the /etc/systemd/system/ directory. Let us call this service 
-unit file - project-mercury.service.
+IMPORTANT - TAKE ONE CONDITION AT A TIME AND BUILD ON IT.
+
+To run the /usr/bin/project-mercury.sh in the background it has to be defined as  a service. To do this, you need to create a SERVICE UNIT FILE. 
+The service unit file will be located in the /etc/systemd/system/ directory. Let us call this service unit file - "project-mercury.service".
 In this file, there will be a section called service and the "ExecStart" DERIVATIVE under it  will point to the script like so.
+
 Note - A most basic service definition can simply be created just with two lines for example:
+
 Line 1 - [Service] 
 Line 2 - ExecStart= /bin/bash /usr/bin/project-mercury.sh
+
 Note - Another way to refer to a derivative is DIRECTIVE.
-You can run the project-mercury.sh script in the background  by simply running 
-the following command (as root because all systemctl commands require sudo access.)
+You can run the project-mercury.sh script in the background  by simply running the following command (as root because all systemctl commands require sudo access.)
 
 
 sudo systemctl start project-mercury.service
 
 To check if the service is running properly, run the sudo systemctl status project-mercury.service command.
+
 Once the command output shows that the service is running successfully you can be sure that the script will now run in the background.
 
-To make the script start running in the background automatically when the system, add another keyword called "Installed" as shown below.
+To make the script start running in the background automatically when the system starts, add another keyword called "Installed" as shown below.
 Since we want the service to start when the system boots, set the "WantedBy" DERIVATIVE to graphical.target.
+
 [Install]
 WantedBy graphical.target
 
-Since we want the service to be run with the project_mercury user instead of root (root is the default user), add the following line where the user DERIVATIVE is pointing to the 
-project_mercury user. Add this under the [Service] keyword.
+Since we want the service to be run with the project_mercury user instead of root (root is the default user), 
+add the following line where the user DERIVATIVE is pointing to the project_mercury user. Add this under the [Service] keyword.
+
 User=project_mercury
 
 The "Restart" DERIVATIVE is another derivative we can use. We can use this to set when the service should restart.
+
 Restart=on-failure.
 
 But before we set this DERIVATIVE, let us stop the service by running systemctl stop project-mercury.service.
@@ -50,9 +56,10 @@ We can use the RestartSec=10 DERIVATIVE to set how long the system should wait b
 
 The logging requirement is provided by default so it requires no additional configuration.
 
-Since the Python Django application depends on the postgres service, we can add a DERIVATIVE to ensure that the application starts only after the postgres 
-DB is running. To do so, add another SECTION to the service file called [Unit]. Under this, use the "After" DERIVATIVE as shown below. You can also add 
-description and documentation derivatives under the Unit SECTION as shown below. While these derivatives are not required, they are considered to be a good practice.
+Since the Python Django application depends on the postgres service, we can add a DERIVATIVE to ensure that the application starts only after the postgres DB is running.
+
+To do so, add another SECTION to the service file called [Unit]. Under this, use the "After" DERIVATIVE as shown below. You can also add description and 
+documentation derivatives under the Unit SECTION as shown below. While these derivatives are not required, they are considered to be a good practice.
 
 [Unit]
 Description=Python Django for project mercury.
@@ -62,9 +69,9 @@ After=postgresql.service
 Now that we are ready to restart the service, FIRST ENSURE THAT YOU RUN THE systemctl daemon-reload command so that the project-mercury.service file will be re read.
 After that, run the systemctl restart project-mercury.service file.
 
-So, the dependencies of the service file go to the [Unit] section along with documentation and description DERIVATIVES.
-The requirement to start the graphical interface go to the [Install] section.
-Everything else goes to the [Service] section.
+So, the dependencies of the service file go under the [Unit] section along with documentation and description DERIVATIVES.
+The requirement to start the graphical interface go under the [Install] section.
+Everything else goes under the [Service] section.
 
 ---------------------------------------------
 Contents of the project-mercury.service file
