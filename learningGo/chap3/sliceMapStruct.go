@@ -146,21 +146,62 @@ func main() {
 			}
 	*/
 
-	//Example 3.11
-	intSet := map[int]bool{}
+	/*
+		//Example 3.11
+		intSet := map[int]bool{}
 
-	vals := []int{22, 5, 10, 2, 5, 8, 22, 7, 3, 9, 1, 2, 0}
+		vals := []int{22, 5, 10, 2, 5, 8, 22, 7, 3, 9, 1, 2, 0}
 
-	for _, v := range vals {
-		intSet[v] = true
+		for _, v := range vals {
+			intSet[v] = true
 
+		}
+		//fmt.Println("intSet is now:", intSet)
+		fmt.Println(len(vals), len(intSet))
+		fmt.Println(intSet[5])
+		fmt.Println(intSet[500])
+		if intSet[500] {
+			fmt.Println("We have 500 in the intSet.")
+		}
+	*/
+
+	//****************************STRUCT****************************
+
+	//Keyword type, then the name you want to give and then keyword struct.
+
+	type person struct {
+		name     string
+		age      int
+		location string
 	}
-	//fmt.Println("intSet is now:", intSet)
-	fmt.Println(len(vals), len(intSet))
-	fmt.Println(intSet[5])
-	fmt.Println(intSet[500])
-	if intSet[500] {
-		fmt.Println("We have 500 in the intSet.")
+
+	var bob = person{
+		name:     "Bob",
+		location: "U.S",
 	}
+	bob.age = 47
+
+	//Anonymous struct
+	//note how the declaration starts with "var someperosn struct"
+	//rather than type someperson struct.
+	var someperson struct {
+		name       string
+		age        int
+		profession string
+	}
+	someperson.age = 47
+	someperson.name = "Dan the driller."
+	someperson.profession = "Driller"
+
+	//Another way to declare an anonymous struct.
+	pet := struct {
+		name string
+		kind string
+	}{
+		name: "cobra",
+		kind: "dog",
+	}
+
+	fmt.Println(pet.kind, pet.name)
 
 }
