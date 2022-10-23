@@ -86,20 +86,81 @@ func main() {
 		fmt.Printf("myMap2 is of type %T and contains %[1]v\n", myMap2)
 	*/
 
-	mapStrNums := map[string][]int{
-		"One":   {10, 100, 1000},
-		"Two":   {20, 200, 2000},
-		"Three": {30, 300, 3000},
-	}
-	mapStrNums["Three"] = []int{33, 333, 333}
-	mapStrNums["Four"] = []int{40, 400, 4000}
-
-	for key, value := range mapStrNums {
-		fmt.Println("Before multiplying values by 3 we have", key, value)
-		for eachValue := range value {
-			value[eachValue] *= 3
+	/*
+		mapStrNums := map[string][]int{
+			"One":   {10, 100, 1000},
+			"Two":   {20, 200, 2000},
+			"Three": {30, 300, 3000},
 		}
-		fmt.Println("AFTER multiplying values by 3 we have", key, value)
-		fmt.Println("---------------------------------------------------")
+		mapStrNums["Three"] = []int{33, 333, 333}
+		mapStrNums["Four"] = []int{40, 400, 4000}
+
+		for key, value := range mapStrNums {
+			fmt.Println("Before multiplying values by 3 we have", key, value)
+			fmt.Printf("Type of the key variable is %T and type of the value variable is %T\n", key, value)
+			for eachValue := range value {
+				value[eachValue] *= 3
+			}
+			fmt.Println("AFTER multiplying values by 3 we have", key, value)
+			fmt.Println("---------------------------------------------------")
+		}
+
+	*/
+
+	/*
+		//Example 3.10
+		totalWins := map[string]int{}
+		totalWins["Orcas"] = 1
+		totalWins["Lions"] = 2
+		fmt.Println(totalWins["Orcas"])
+		fmt.Println(totalWins["Kittens"])
+		totalWins["Kittens"]++
+		fmt.Println(totalWins["Kittens"])
+		totalWins["Lions"] = 3
+		fmt.Println(totalWins["Lions"])
+	*/
+
+	/*
+
+		myMap := map[string]int{
+			"hello": 5,
+			"world": 0,
+		}
+
+		//Note the difference. If you say
+		// for k, v := range myMap {
+		//do something here
+		//}
+		//The k becomes the key and v becomes the value of the map.
+		//HOWEVER, if you say the following
+		// k, v := myMap["key"]
+		//the "k" contains the value and the v contains a "boolean" value (YES, A BOOLEAN VALUE!!)
+		//Therefore the above expression is better written as v, ok := myMap["hello"]
+		//v, ok := myMap["hello"]
+		//fmt.Printf("Value of variable 'v' is %v and type is %[1]T\n", v)
+		//fmt.Printf("Value of variable 'ok' is %v and type is %[1]T\n", ok)
+			for key := range myMap {
+				v, ok := myMap[key]
+				fmt.Println("v: ", v, "ok: ", ok)
+
+			}
+	*/
+
+	//Example 3.11
+	intSet := map[int]bool{}
+
+	vals := []int{22, 5, 10, 2, 5, 8, 22, 7, 3, 9, 1, 2, 0}
+
+	for _, v := range vals {
+		intSet[v] = true
+
 	}
+	//fmt.Println("intSet is now:", intSet)
+	fmt.Println(len(vals), len(intSet))
+	fmt.Println(intSet[5])
+	fmt.Println(intSet[500])
+	if intSet[500] {
+		fmt.Println("We have 500 in the intSet.")
+	}
+
 }
